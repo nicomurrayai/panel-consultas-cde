@@ -120,11 +120,6 @@ export function ContactoDetailDialog({
         <div className="overflow-y-auto px-5 py-5 md:px-6 md:py-6">
           <div className="grid gap-3 md:grid-cols-3">
             <DetailMetaCard
-              action={{
-                href: `mailto:${contacto.email}`,
-                iconSrc: '/mail.png',
-                label: 'Enviar Mail',
-              }}
               icon={Mail}
               label="Email"
               value={contacto.email}
