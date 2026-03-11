@@ -1,4 +1,6 @@
-import { RefreshCcw, Search, X } from 'lucide-react'
+import { LogOut, RefreshCcw, Search, X } from 'lucide-react'
+import { AuthScreen } from './features/auth/components/AuthScreen'
+import { useSimpleAuth } from './features/auth/hooks/useSimpleAuth'
 import { ContactoCards } from './features/contacto/components/ContactoCards'
 import { ContactoDetailDialog } from './features/contacto/components/ContactoDetailDialog'
 import { ContactoTable } from './features/contacto/components/ContactoTable'
@@ -7,6 +9,28 @@ import { PaginationControls } from './features/contacto/components/PaginationCon
 import { useContactoDashboard } from './features/contacto/hooks/useContactoDashboard'
 
 function App() {
+  const { clearError, errorMessage, helperMessage, isAuthenticated, login, logout } =
+    useSimpleAuth()
+
+  if (!isAuthenticated) {
+    return (
+      <AuthScreen
+        errorMessage={errorMessage}
+        helperMessage={helperMessage}
+        onInputChange={clearError}
+        onSubmit={login}
+      />
+    )
+  }
+
+  return <DashboardView onLogout={logout} />
+}
+
+type DashboardViewProps = {
+  onLogout: () => void
+}
+
+function DashboardView({ onLogout }: DashboardViewProps) {
   const {
     closeDetail,
     currentPage,
@@ -38,6 +62,17 @@ function App() {
       <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-120 bg-[radial-gradient(circle_at_top_left,rgba(37,150,190,0.20),transparent_42%),radial-gradient(circle_at_top_right,rgba(37,150,190,0.24),transparent_38%)]" />
 
       <div className="mx-auto flex w-full max-w-360 flex-col gap-6">
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={onLogout}
+            className="inline-flex items-center gap-2 rounded-full border border-(--line) bg-white/88 px-4 py-2 text-sm font-medium text-(--ink) shadow-[0_16px_30px_rgba(15,46,56,0.06)] transition hover:border-(--brand) hover:text-(--brand)"
+          >
+            <LogOut className="h-4 w-4" />
+            Cerrar sesion
+          </button>
+        </div>
+
         <DashboardStats
           error={statsError}
           isLoading={statsLoading}

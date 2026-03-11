@@ -17,9 +17,13 @@ La app necesita estas variables en un archivo `.env.local`:
 ```bash
 VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
 VITE_SUPABASE_ANON_KEY=tu-clave-anon
+VITE_PANEL_AUTH_USERNAME=admin
+VITE_PANEL_AUTH_PASSWORD=panel1234
 ```
 
 Puedes partir de `.env.example`.
+
+Si no defines `VITE_PANEL_AUTH_USERNAME` y `VITE_PANEL_AUTH_PASSWORD`, el acceso local usa por defecto `admin / panel1234`.
 
 ## Scripts
 
