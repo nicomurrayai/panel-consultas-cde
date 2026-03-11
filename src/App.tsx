@@ -1,5 +1,6 @@
-import { LogOut, RefreshCcw, Search, X } from 'lucide-react'
+import { ChevronDown, ListFilter, LogOut, RefreshCcw, Search, X } from 'lucide-react'
 import { AuthScreen } from './features/auth/components/AuthScreen'
+import { CONTACTO_FILTER_STATUS_OPTIONS } from './features/contacto/status'
 import { useSimpleAuth } from './features/auth/hooks/useSimpleAuth'
 import { ContactoCards } from './features/contacto/components/ContactoCards'
 import { ContactoDetailDialog } from './features/contacto/components/ContactoDetailDialog'
@@ -7,6 +8,7 @@ import { ContactoTable } from './features/contacto/components/ContactoTable'
 import { DashboardStats } from './features/contacto/components/DashboardStats'
 import { PaginationControls } from './features/contacto/components/PaginationControls'
 import { useContactoDashboard } from './features/contacto/hooks/useContactoDashboard'
+import type { ContactoStatusFilter } from './types/contacto'
 
 function App() {
   const { clearError, errorMessage, helperMessage, isAuthenticated, login, logout } =
@@ -34,7 +36,11 @@ function DashboardView({ onLogout }: DashboardViewProps) {
   const {
     closeDetail,
     currentPage,
+    deleteError,
+    deleteLoading,
+    deleteSelectedContacto,
     error,
+    hasActiveStatusFilter,
     hasActiveSearch,
     isLoading,
     isSearchPending,
@@ -46,14 +52,23 @@ function DashboardView({ onLogout }: DashboardViewProps) {
     selectedContacto,
     setCurrentPage,
     setSearchInput,
+    setStatusFilter,
+    statusFilter,
+    statusUpdateError,
+    statusUpdateLoading,
     stats,
     statsError,
     statsLoading,
     totalPages,
+    updateSelectedContactoEstado,
   } = useContactoDashboard()
 
   const showEmptyState = !isLoading && !error && records.length === 0
-  const resultLabel = hasActiveSearch
+  const hasActiveFilters = hasActiveSearch || hasActiveStatusFilter
+  const selectedStatusLabel =
+    CONTACTO_FILTER_STATUS_OPTIONS.find((option) => option.value === statusFilter)?.label ??
+    'Todos los estados'
+  const resultLabel = hasActiveFilters
     ? `${resultsCount} resultados`
     : `${resultsCount} consultas`
 
@@ -96,28 +111,47 @@ function DashboardView({ onLogout }: DashboardViewProps) {
               </div>
             </div>
 
-            <label className="group flex w-full max-w-xl items-center gap-3 rounded-[1.4rem] border border-(--line) bg-(--background) px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition focus-within:border-(--brand) focus-within:shadow-[0_0_0_4px_rgba(37,150,190,0.12)] lg:w-md">
-              <Search className="h-5 w-5 text-(--brand)" />
-              <input
-                className="w-full border-0 bg-transparent text-sm text-(--ink) outline-none placeholder:text-(--muted)"
-                type="search"
-                value={searchInput}
-                onChange={(event) => setSearchInput(event.target.value)}
-                placeholder="Buscar nombre o email"
-                autoComplete="off"
-                spellCheck={false}
-              />
-              {searchInput ? (
-                <button
-                  type="button"
-                  onClick={() => setSearchInput('')}
-                  className="rounded-full border border-(--line) p-1 text-(--muted) transition hover:border-(--brand) hover:text-(--brand)"
-                  aria-label="Limpiar busqueda"
+            <div className="flex w-full max-w-xl flex-col gap-3 lg:w-auto lg:max-w-2xl">
+              <label className="group flex w-full items-center gap-3 rounded-[1.4rem] border border-(--line) bg-(--background) px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition focus-within:border-(--brand) focus-within:shadow-[0_0_0_4px_rgba(37,150,190,0.12)] lg:w-md">
+                <Search className="h-5 w-5 text-(--brand)" />
+                <input
+                  className="w-full border-0 bg-transparent text-sm text-(--ink) outline-none placeholder:text-(--muted)"
+                  type="search"
+                  value={searchInput}
+                  onChange={(event) => setSearchInput(event.target.value)}
+                  placeholder="Buscar nombre o email"
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+                {searchInput ? (
+                  <button
+                    type="button"
+                    onClick={() => setSearchInput('')}
+                    className="rounded-full border border-(--line) p-1 text-(--muted) transition hover:border-(--brand) hover:text-(--brand)"
+                    aria-label="Limpiar busqueda"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                ) : null}
+              </label>
+
+              <label className="group relative flex w-full items-center gap-3 rounded-[1.4rem] border border-(--line) bg-(--background) px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition focus-within:border-(--brand) focus-within:shadow-[0_0_0_4px_rgba(37,150,190,0.12)] lg:w-64">
+                <ListFilter className="h-5 w-5 text-(--brand)" />
+                <select
+                  className="w-full appearance-none border-0 bg-transparent pr-8 text-sm text-(--ink) outline-none"
+                  value={statusFilter}
+                  onChange={(event) => setStatusFilter(event.target.value as ContactoStatusFilter)}
+                  aria-label="Filtrar por estado"
                 >
-                  <X className="h-4 w-4" />
-                </button>
-              ) : null}
-            </label>
+                  {CONTACTO_FILTER_STATUS_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-4 h-4 w-4 text-(--muted)" />
+              </label>
+            </div>
           </div>
 
           <div className="flex flex-col gap-3 border-b border-(--line) px-5 py-4 text-sm text-(--muted) sm:flex-row sm:items-center sm:justify-between lg:px-6">
@@ -133,6 +167,12 @@ function DashboardView({ onLogout }: DashboardViewProps) {
                   </span>
                 ) : null}
               </span>
+              {hasActiveStatusFilter ? (
+                <>
+                  <span className="hidden h-1 w-1 rounded-full bg-(--brand) sm:block" />
+                  <span>Estado: {selectedStatusLabel}</span>
+                </>
+              ) : null}
             </div>
 
             <button
@@ -152,7 +192,7 @@ function DashboardView({ onLogout }: DashboardViewProps) {
             ) : isLoading ? (
               <LoadingState />
             ) : showEmptyState ? (
-              <EmptyState hasActiveSearch={hasActiveSearch} />
+              <EmptyState hasActiveFilters={hasActiveFilters} />
             ) : (
               <>
                 <ContactoTable contactos={records} onOpenDetail={openDetail} />
@@ -169,16 +209,25 @@ function DashboardView({ onLogout }: DashboardViewProps) {
         </section>
       </div>
 
-      <ContactoDetailDialog contacto={selectedContacto} onClose={closeDetail} />
+      <ContactoDetailDialog
+        contacto={selectedContacto}
+        deleteError={deleteError}
+        isDeleting={deleteLoading}
+        isUpdatingStatus={statusUpdateLoading}
+        onClose={closeDetail}
+        onDelete={deleteSelectedContacto}
+        onStatusChange={updateSelectedContactoEstado}
+        statusUpdateError={statusUpdateError}
+      />
     </main>
   )
 }
 
 type EmptyStateProps = {
-  hasActiveSearch: boolean
+  hasActiveFilters: boolean
 }
 
-function EmptyState({ hasActiveSearch }: EmptyStateProps) {
+function EmptyState({ hasActiveFilters }: EmptyStateProps) {
   return (
     <div className="rounded-[1.75rem] border border-dashed border-(--line) bg-(--background) px-6 py-12 text-center">
       <div className="mx-auto max-w-xl space-y-3">
@@ -186,11 +235,11 @@ function EmptyState({ hasActiveSearch }: EmptyStateProps) {
           Sin consultas
         </p>
         <h3 className="font-display text-3xl text-(--ink)">
-          {hasActiveSearch ? 'No hay resultados.' : 'No hay consultas.'}
+          {hasActiveFilters ? 'No hay resultados.' : 'No hay consultas.'}
         </h3>
         <p className="text-sm leading-7 text-(--muted) sm:text-base">
-          {hasActiveSearch
-            ? 'Prueba con otro nombre o email.'
+          {hasActiveFilters
+            ? 'Prueba con otro nombre, email o estado.'
             : 'Las nuevas consultas apareceran aqui.'}
         </p>
       </div>
@@ -233,22 +282,24 @@ function LoadingState() {
   return (
     <div className="space-y-4">
       <div className="hidden overflow-hidden rounded-3xl border border-(--line) md:block">
-        <div className="grid grid-cols-[1.2fr_1fr_0.85fr_1.35fr_0.8fr_0.5fr] gap-3 border-b border-(--line) bg-(--surface-soft) px-5 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-(--brand-strong)">
+        <div className="grid grid-cols-[1.2fr_1fr_0.85fr_1.25fr_0.78fr_0.7fr_0.5fr] gap-3 border-b border-(--line) bg-(--surface-soft) px-5 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-(--brand-strong)">
           <span>Nombre</span>
           <span>Email</span>
           <span>Telefono</span>
           <span>Mensaje</span>
           <span>Fecha</span>
+          <span>Estado</span>
           <span>Accion</span>
         </div>
         <div className="divide-y divide-(--line)">
           {Array.from({ length: 6 }, (_, index) => (
-            <div key={index} className="grid animate-pulse grid-cols-[1.2fr_1fr_0.85fr_1.35fr_0.8fr_0.5fr] gap-3 px-5 py-4">
+            <div key={index} className="grid animate-pulse grid-cols-[1.2fr_1fr_0.85fr_1.25fr_0.78fr_0.7fr_0.5fr] gap-3 px-5 py-4">
               <div className="h-4 rounded-full bg-(--surface-strong)" />
               <div className="h-4 rounded-full bg-(--surface-strong)" />
               <div className="h-4 rounded-full bg-(--surface-strong)" />
               <div className="h-4 rounded-full bg-(--surface-strong)" />
               <div className="h-4 rounded-full bg-(--surface-strong)" />
+              <div className="h-9 rounded-full bg-(--surface-strong)" />
               <div className="h-9 rounded-full bg-(--surface-strong)" />
             </div>
           ))}

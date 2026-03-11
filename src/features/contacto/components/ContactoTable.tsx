@@ -1,4 +1,5 @@
 import { Eye } from 'lucide-react'
+import { ContactoStatusBadge } from './ContactoStatusBadge'
 import { formatShortDateTime } from '../../../lib/format'
 import type { ContactoRow } from '../../../types/contacto'
 
@@ -30,6 +31,9 @@ export function ContactoTable({ contactos, onOpenDetail }: ContactoTableProps) {
                 Fecha de envio
               </th>
               <th scope="col" className="border-b border-[var(--line)] px-5 py-4 font-semibold">
+                Estado
+              </th>
+              <th scope="col" className="border-b border-[var(--line)] px-5 py-4 font-semibold">
                 Ver
               </th>
             </tr>
@@ -43,10 +47,7 @@ export function ContactoTable({ contactos, onOpenDetail }: ContactoTableProps) {
                 className="cursor-pointer transition hover:bg-[var(--surface-soft)]"
               >
                 <td className="border-b border-[var(--line)] px-5 py-4 align-top">
-                  <div className="space-y-1">
-                    <p className="font-medium text-[var(--ink)]">{contacto.nombrecompleto}</p>
-                    <p className="text-sm text-[var(--muted)]">ID #{contacto.id}</p>
-                  </div>
+                  <p className="font-medium text-[var(--ink)]">{contacto.nombrecompleto}</p>
                 </td>
 
                 <td className="border-b border-[var(--line)] px-5 py-4 align-top text-sm text-[var(--ink)]">
@@ -65,6 +66,10 @@ export function ContactoTable({ contactos, onOpenDetail }: ContactoTableProps) {
 
                 <td className="border-b border-[var(--line)] px-5 py-4 align-top text-sm text-[var(--ink)]">
                   {formatShortDateTime(contacto.created_at)}
+                </td>
+
+                <td className="border-b border-[var(--line)] px-5 py-4 align-top">
+                  <ContactoStatusBadge estado={contacto.estado} />
                 </td>
 
                 <td className="border-b border-[var(--line)] px-5 py-4 align-top">

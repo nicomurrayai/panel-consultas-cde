@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Construir un panel interno de solo lectura para visualizar las consultas almacenadas en `public.contacto`, con foco en lectura rpida, bsqueda por nombre o email y detalle completo del mensaje.
+Construir un panel interno para visualizar las consultas almacenadas en `public.contacto`, con foco en lectura rpida, bsqueda por nombre o email, detalle completo del mensaje y actualizacin simple de estado.
 
 ## Decisiones
 
@@ -19,6 +19,7 @@ Construir un panel interno de solo lectura para visualizar las consultas almacen
 - Tabla con headers fijos en escritorio.
 - Cards en mvil para mantener legibilidad.
 - Modal para ver el mensaje completo y metadatos.
+- Cambio de estado desde el modal a `En progreso` o `Resuelta`.
 
 ## Verificacin prevista
 

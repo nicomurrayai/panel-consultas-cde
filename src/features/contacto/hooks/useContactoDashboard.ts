@@ -1,6 +1,7 @@
 import { startTransition, useDeferredValue, useEffect, useState } from 'react'
-import { getContactoList, getDashboardStats } from '../api'
-import type { ContactoRow, DashboardStats } from '../../../types/contacto'
+import { deleteContacto, getContactoList, getDashboardStats, updateContactoEstado } from '../api'
+import type { ContactoRow, ContactoStatusFilter, DashboardStats } from '../../../types/contacto'
+import type { EditableContactoEstado } from '../status'
 
 const PAGE_SIZE = 12
 
@@ -17,10 +18,21 @@ type StatsState = {
   error: string | null
 }
 
+type StatusUpdateState = {
+  error: string | null
+  isLoading: boolean
+}
+
+type DeleteState = {
+  error: string | null
+  isLoading: boolean
+}
+
 export function useContactoDashboard() {
   const [searchInput, setSearchInput] = useState('')
   const normalizedSearchInput = searchInput.trim().slice(0, 120)
   const search = useDeferredValue(normalizedSearchInput)
+  const [statusFilter, setStatusFilter] = useState<ContactoStatusFilter>('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedContacto, setSelectedContacto] = useState<ContactoRow | null>(null)
   const [listRevision, setListRevision] = useState(0)
@@ -36,12 +48,20 @@ export function useContactoDashboard() {
     isLoading: true,
     error: null,
   })
+  const [statusUpdateState, setStatusUpdateState] = useState<StatusUpdateState>({
+    error: null,
+    isLoading: false,
+  })
+  const [deleteState, setDeleteState] = useState<DeleteState>({
+    error: null,
+    isLoading: false,
+  })
 
   useEffect(() => {
     startTransition(() => {
       setCurrentPage(1)
     })
-  }, [search])
+  }, [search, statusFilter])
 
   useEffect(() => {
     let isActive = true
@@ -56,6 +76,7 @@ export function useContactoDashboard() {
       page: currentPage,
       pageSize: PAGE_SIZE,
       search,
+      statusFilter,
     })
       .then((result) => {
         if (!isActive) {
@@ -87,7 +108,7 @@ export function useContactoDashboard() {
     return () => {
       isActive = false
     }
-  }, [currentPage, listRevision, search])
+  }, [currentPage, listRevision, search, statusFilter])
 
   useEffect(() => {
     let isActive = true
@@ -146,11 +167,114 @@ export function useContactoDashboard() {
   }
 
   function openDetail(contacto: ContactoRow) {
+    setStatusUpdateState({
+      error: null,
+      isLoading: false,
+    })
+    setDeleteState({
+      error: null,
+      isLoading: false,
+    })
     setSelectedContacto(contacto)
   }
 
   function closeDetail() {
+    setStatusUpdateState({
+      error: null,
+      isLoading: false,
+    })
+    setDeleteState({
+      error: null,
+      isLoading: false,
+    })
     setSelectedContacto(null)
+  }
+
+  async function changeSelectedContactoEstado(estado: EditableContactoEstado) {
+    if (!selectedContacto || statusUpdateState.isLoading || deleteState.isLoading) {
+      return
+    }
+
+    setStatusUpdateState({
+      error: null,
+      isLoading: true,
+    })
+
+    try {
+      const updatedContacto = await updateContactoEstado(selectedContacto.id, estado)
+
+      setListState((current) => ({
+        ...current,
+        records: current.records.map((contacto) =>
+          contacto.id === updatedContacto.id ? updatedContacto : contacto,
+        ),
+      }))
+
+      setSelectedContacto((current) =>
+        current?.id === updatedContacto.id ? updatedContacto : current,
+      )
+
+      startTransition(() => {
+        setListRevision((value) => value + 1)
+      })
+
+      setStatusUpdateState({
+        error: null,
+        isLoading: false,
+      })
+    } catch (error) {
+      setStatusUpdateState({
+        error:
+          error instanceof Error
+            ? error.message
+            : 'No se pudo actualizar el estado de la consulta.',
+        isLoading: false,
+      })
+    }
+  }
+
+  async function deleteSelectedContacto() {
+    if (!selectedContacto || statusUpdateState.isLoading || deleteState.isLoading) {
+      return
+    }
+
+    setDeleteState({
+      error: null,
+      isLoading: true,
+    })
+
+    try {
+      const deletedId = selectedContacto.id
+
+      await deleteContacto(deletedId)
+
+      setListState((current) => ({
+        ...current,
+        records: current.records.filter((contacto) => contacto.id !== deletedId),
+        total: Math.max(0, current.total - 1),
+      }))
+
+      setStatusUpdateState({
+        error: null,
+        isLoading: false,
+      })
+      setDeleteState({
+        error: null,
+        isLoading: false,
+      })
+      setSelectedContacto(null)
+
+      startTransition(() => {
+        setListRevision((value) => value + 1)
+        setStatsRevision((value) => value + 1)
+      })
+    } catch (error) {
+      setDeleteState({
+        error:
+          error instanceof Error ? error.message : 'No se pudo eliminar la consulta.',
+        isLoading: false,
+      })
+    }
   }
 
   function changePage(nextPage: number) {
@@ -161,6 +285,7 @@ export function useContactoDashboard() {
     closeDetail,
     currentPage,
     error: listState.error,
+    hasActiveStatusFilter: statusFilter !== 'all',
     hasActiveSearch: normalizedSearchInput.length > 0,
     isLoading: listState.isLoading,
     isSearchPending: normalizedSearchInput !== search,
@@ -172,9 +297,17 @@ export function useContactoDashboard() {
     selectedContacto,
     setCurrentPage: changePage,
     setSearchInput,
+    setStatusFilter,
+    statusFilter,
+    deleteSelectedContacto,
+    deleteError: deleteState.error,
+    deleteLoading: deleteState.isLoading,
+    statusUpdateError: statusUpdateState.error,
+    statusUpdateLoading: statusUpdateState.isLoading,
     stats: statsState.stats,
     statsError: statsState.error,
     statsLoading: statsState.isLoading,
     totalPages,
+    updateSelectedContactoEstado: changeSelectedContactoEstado,
   }
 }

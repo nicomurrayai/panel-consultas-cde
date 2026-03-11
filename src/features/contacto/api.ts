@@ -2,10 +2,15 @@ import { getSupabaseClient } from '../../lib/supabase'
 import type {
   ContactoListParams,
   ContactoListResult,
+  ContactoRow,
   DashboardStats,
 } from '../../types/contacto'
+import {
+  getContactoStatusFilterValues,
+  type EditableContactoEstado,
+} from './status'
 
-const CONTACTO_COLUMNS = 'id, nombrecompleto, email, telefono, mensaje, created_at'
+const CONTACTO_COLUMNS = 'id, nombrecompleto, email, telefono, mensaje, estado, created_at'
 
 function formatSupabaseErrorMessage(error: unknown, fallbackMessage: string) {
   if (error instanceof Error) {
@@ -29,6 +34,7 @@ export async function getContactoList({
   page,
   pageSize,
   search,
+  statusFilter,
 }: ContactoListParams): Promise<ContactoListResult> {
   const from = (page - 1) * pageSize
   const to = from + pageSize - 1
@@ -41,6 +47,15 @@ export async function getContactoList({
     if (normalizedSearch) {
       const escapedSearch = escapeLikeValue(normalizedSearch)
       query = query.or(`nombrecompleto.ilike.*${escapedSearch}*,email.ilike.*${escapedSearch}*`)
+    }
+
+    if (statusFilter !== 'all') {
+      const statusValues = getContactoStatusFilterValues(statusFilter)
+
+      query =
+        statusValues.length === 1
+          ? query.eq('estado', statusValues[0])
+          : query.in('estado', statusValues)
     }
 
     const { count, data, error } = await query
@@ -103,6 +118,48 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   } catch (error) {
     throw new Error(
       formatSupabaseErrorMessage(error, 'No se pudieron calcular las metricas del panel.'),
+    )
+  }
+}
+
+export async function updateContactoEstado(
+  contactoId: number,
+  estado: EditableContactoEstado,
+): Promise<ContactoRow> {
+  const supabase = getSupabaseClient()
+
+  try {
+    const { data, error } = await supabase
+      .from('contacto')
+      .update({ estado })
+      .eq('id', contactoId)
+      .select(CONTACTO_COLUMNS)
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    return data
+  } catch (error) {
+    throw new Error(
+      formatSupabaseErrorMessage(error, 'No se pudo actualizar el estado de la consulta.'),
+    )
+  }
+}
+
+export async function deleteContacto(contactoId: number): Promise<void> {
+  const supabase = getSupabaseClient()
+
+  try {
+    const { error } = await supabase.from('contacto').delete().eq('id', contactoId)
+
+    if (error) {
+      throw error
+    }
+  } catch (error) {
+    throw new Error(
+      formatSupabaseErrorMessage(error, 'No se pudo eliminar la consulta.'),
     )
   }
 }

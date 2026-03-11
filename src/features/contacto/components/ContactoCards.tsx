@@ -1,4 +1,5 @@
 import { Eye } from 'lucide-react'
+import { ContactoStatusBadge } from './ContactoStatusBadge'
 import { formatShortDateTime } from '../../../lib/format'
 import type { ContactoRow } from '../../../types/contacto'
 
@@ -26,9 +27,12 @@ export function ContactoCards({ contactos, onOpenDetail }: ContactoCardsProps) {
             <p className="text-truncate-2 text-sm leading-6 text-[var(--muted)]">{contacto.mensaje}</p>
 
             <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-medium text-[var(--ink)]">
-                {formatShortDateTime(contacto.created_at)}
-              </p>
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-[var(--ink)]">
+                  {formatShortDateTime(contacto.created_at)}
+                </p>
+                <ContactoStatusBadge estado={contacto.estado} />
+              </div>
               <button
                 type="button"
                 onClick={(event) => {

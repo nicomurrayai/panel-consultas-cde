@@ -1,6 +1,6 @@
 # Panel de Consultas
 
-Aplicacin interna construida con Vite, React, TypeScript, TailwindCSS y Supabase para visualizar consultas recibidas desde la tabla `public.contacto`.
+Aplicacin interna construida con Vite, React, TypeScript, TailwindCSS y Supabase para visualizar consultas recibidas desde la tabla `public.contacto` y gestionar su estado.
 
 ## Stack
 
@@ -38,13 +38,16 @@ npm run preview
 
 - Listado ordenado por `created_at desc`
 - Bsqueda por nombre o email
+- Filtro por estado (`Pendiente`, `En progreso`, `Resuelta`)
 - Tabla con headers fijos para escritorio
 - Vista en cards para mvil
 - Modal con mensaje completo
+- Cambio de estado a `En progreso` o `Resuelta` desde el detalle
+- Eliminacin irreversible de consultas desde el detalle
 - Mtricas simples del panel
 
 ## Notas de integracin
 
-- La app es de solo lectura.
-- Se asume que la tabla `public.contacto` tiene polticas RLS que permiten lectura con la anon key usada por el panel.
+- La app permite actualizar el campo `estado` y eliminar consultas desde el modal de detalle.
+- Se asume que la tabla `public.contacto` tiene polticas RLS que permiten lectura, update del campo `estado` y delete con la anon key usada por el panel.
 - Si faltan credenciales o la poltica RLS bloquea el acceso, el dashboard muestra un estado de error recuperable.

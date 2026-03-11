@@ -4,13 +4,17 @@ export type ContactoRow = {
   email: string
   telefono: string
   mensaje: string
+  estado: string | null
   created_at: string
 }
+
+export type ContactoStatusFilter = 'all' | 'pendiente' | 'en progreso' | 'resuelta'
 
 export type ContactoListParams = {
   page: number
   pageSize: number
   search: string
+  statusFilter: ContactoStatusFilter
 }
 
 export type ContactoListResult = {
@@ -35,6 +39,7 @@ export type Database = {
           email: string
           telefono: string
           mensaje: string
+          estado?: string | null
           created_at?: string
         }
         Update: {
@@ -43,6 +48,7 @@ export type Database = {
           email?: string
           telefono?: string
           mensaje?: string
+          estado?: string | null
           created_at?: string
         }
         Relationships: []

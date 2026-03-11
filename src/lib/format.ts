@@ -35,6 +35,16 @@ export function formatShortDateTime(value: string) {
   return shortDateTimeFormatter.format(new Date(value))
 }
 
+export function formatWhatsAppLink(value: string) {
+  const normalizedPhone = value.replace(/\D/g, '')
+
+  if (!normalizedPhone) {
+    return null
+  }
+
+  return `https://wa.me/${normalizedPhone}`
+}
+
 export function formatRelativeTime(value: string | null) {
   if (!value) {
     return 'Esperando primeras consultas'
