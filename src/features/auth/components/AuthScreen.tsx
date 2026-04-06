@@ -56,7 +56,7 @@ export function AuthScreen({
               <div className="space-y-2">
                 <h1 className="font-display text-4xl text-(--ink) sm:text-5xl">Acceso al panel</h1>
                 <p className="mx-auto max-w-md text-sm leading-7 text-(--muted) sm:text-base">
-                  Ingresa con tu usuario y contraseña para ver las consultas recibidas.
+                  Ingresa con tu usuario y contrasena para gestionar consultas y noticias.
                 </p>
               </div>
             </div>
@@ -79,14 +79,14 @@ export function AuthScreen({
               </label>
 
               <label className="block space-y-2 text-left">
-                <span className="text-sm font-medium text-(--ink)">Contraseña</span>
+                <span className="text-sm font-medium text-(--ink)">Contrasena</span>
                 <span className="flex items-center gap-3 rounded-[1.4rem] border border-(--line) bg-(--background) px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] transition focus-within:border-(--brand) focus-within:shadow-[0_0_0_4px_rgba(37,150,190,0.12)]">
                   <LockKeyhole className="h-5 w-5 text-(--brand)" />
                   <input
                     autoComplete="current-password"
                     className="w-full border-0 bg-transparent text-sm text-(--ink) outline-none placeholder:text-(--muted)"
                     onChange={(event) => handlePasswordChange(event.target.value)}
-                    placeholder="Tu contraseña"
+                    placeholder="Tu contrasena"
                     required
                     type="password"
                     value={password}

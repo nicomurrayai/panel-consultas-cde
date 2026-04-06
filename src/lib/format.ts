@@ -15,6 +15,10 @@ const shortDateTimeFormatter = new Intl.DateTimeFormat('es-ES', {
   minute: '2-digit',
 })
 
+const dateFormatter = new Intl.DateTimeFormat('es-ES', {
+  dateStyle: 'medium',
+})
+
 const relativeFormatter = new Intl.RelativeTimeFormat('es', {
   numeric: 'auto',
 })
@@ -33,6 +37,14 @@ export function formatDateTime(value: string | null) {
 
 export function formatShortDateTime(value: string) {
   return shortDateTimeFormatter.format(new Date(value))
+}
+
+export function formatDate(value: string | null) {
+  if (!value) {
+    return 'Sin fecha'
+  }
+
+  return dateFormatter.format(new Date(value))
 }
 
 export function formatWhatsAppLink(value: string) {
