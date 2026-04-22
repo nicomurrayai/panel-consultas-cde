@@ -11,6 +11,10 @@ const navigationItems = [
     label: 'Consultas',
   },
   {
+    href: '/fixture',
+    label: 'Fixture',
+  },
+  {
     href: '/noticias',
     label: 'Noticias',
   },
@@ -30,7 +34,7 @@ export function PanelLayout({ onLogout }: PanelLayoutProps) {
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--brand-strong)">
                   Panel interno
                 </p>
-                <p className="text-sm text-(--muted)">Consultas y noticias</p>
+                <p className="text-sm text-(--muted)">Consultas, noticias y fixture</p>
               </div>
             </div>
 

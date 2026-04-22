@@ -1,4 +1,5 @@
 import type { ContactoRow } from './contacto'
+import type { FixtureCondition, FixtureRow, FixtureStatus } from './fixture'
 import type { NoticiaRow } from './noticia'
 
 export type Database = {
@@ -23,6 +24,32 @@ export type Database = {
           mensaje?: string
           estado?: string | null
           created_at?: string
+        }
+        Relationships: []
+      }
+      fixture_partidos: {
+        Row: FixtureRow
+        Insert: {
+          id?: number
+          temporada: number
+          fecha_partido: string
+          rival: string
+          condicion: FixtureCondition
+          torneo?: string | null
+          estado?: FixtureStatus
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          temporada?: number
+          fecha_partido?: string
+          rival?: string
+          condicion?: FixtureCondition
+          torneo?: string | null
+          estado?: FixtureStatus
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
