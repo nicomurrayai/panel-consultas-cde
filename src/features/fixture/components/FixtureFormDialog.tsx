@@ -1,4 +1,4 @@
-import { CalendarDays, LoaderCircle, ShieldCheck, Swords, X } from 'lucide-react'
+import { CalendarDays, LoaderCircle, X } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
 import type { FixtureCondition, FixtureFormValues, FixtureRow, FixtureStatus } from '../../../types/fixture'
@@ -20,17 +20,13 @@ type FixtureFormDialogProps = {
   onSubmit: (values: FixtureFormValues) => Promise<void> | void
 }
 
-const DEFAULT_SEASON = new Date().getFullYear()
-
 function getInitialFormState(fixture: FixtureRow | null) {
   const fixtureTeam = getFixtureTeamByName(fixture?.rival)
 
   return {
-    temporada: String(fixture?.temporada ?? DEFAULT_SEASON),
     fechaPartido: toFixtureDateTimeInputValue(fixture?.fecha_partido),
     rival: fixtureTeam?.nombre ?? '',
     condicion: fixture?.condicion ?? 'local',
-    torneo: fixture?.torneo ?? '',
     estado: fixture?.estado ?? 'programado',
   } as const
 }
@@ -45,11 +41,9 @@ export function FixtureFormDialog({
   onSubmit,
 }: FixtureFormDialogProps) {
   const initialFormState = getInitialFormState(fixture)
-  const [temporada, setTemporada] = useState(initialFormState.temporada)
   const [fechaPartido, setFechaPartido] = useState(initialFormState.fechaPartido)
   const [rival, setRival] = useState<string>(initialFormState.rival)
   const [condicion, setCondicion] = useState<FixtureCondition>(initialFormState.condicion)
-  const [torneo, setTorneo] = useState(initialFormState.torneo)
   const [estado, setEstado] = useState<FixtureStatus>(initialFormState.estado)
   const [localError, setLocalError] = useState<string | null>(null)
 
@@ -82,27 +76,19 @@ export function FixtureFormDialog({
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    const parsedTemporada = Number.parseInt(temporada, 10)
     const selectedTeam = getFixtureTeamByName(rival)
 
-    if (!Number.isInteger(parsedTemporada) || parsedTemporada <= 0) {
-      setLocalError('La temporada debe ser un numero entero mayor a cero.')
-      return
-    }
-
     if (!fechaPartido || !selectedTeam) {
-      setLocalError('Completa temporada, fecha y rival antes de guardar.')
+      setLocalError('Completa fecha y rival antes de guardar.')
       return
     }
 
     setLocalError(null)
 
     await onSubmit({
-      temporada: parsedTemporada,
       fecha_partido: fechaPartido,
       rival: selectedTeam.nombre,
       condicion,
-      torneo: torneo.trim(),
       estado,
     })
   }
@@ -154,19 +140,6 @@ export function FixtureFormDialog({
           <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
             <div className="grid gap-5 sm:grid-cols-2">
               <label className="block space-y-2">
-                <span className="text-sm font-medium text-(--ink)">Temporada</span>
-                <input
-                  className="w-full rounded-[1.2rem] border border-(--line) bg-(--background) px-4 py-3 text-sm text-(--ink) outline-none transition focus:border-(--brand) focus:shadow-[0_0_0_4px_rgba(37,150,190,0.12)]"
-                  min="1"
-                  onChange={(event) => setTemporada(event.target.value)}
-                  placeholder="Ej. 2026"
-                  step="1"
-                  type="number"
-                  value={temporada}
-                />
-              </label>
-
-              <label className="block space-y-2">
                 <span className="text-sm font-medium text-(--ink)">Fecha y hora</span>
                 <input
                   className="w-full rounded-[1.2rem] border border-(--line) bg-(--background) px-4 py-3 text-sm text-(--ink) outline-none transition focus:border-(--brand) focus:shadow-[0_0_0_4px_rgba(37,150,190,0.12)]"
@@ -181,14 +154,34 @@ export function FixtureFormDialog({
                 <FixtureTeamSelect onChange={setRival} value={rival} />
               </div>
 
-              <label className="block space-y-2 sm:col-span-2">
-                <span className="text-sm font-medium text-(--ink)">Torneo</span>
-                <input
+              <label className="block space-y-2">
+                <span className="text-sm font-medium text-(--ink)">Condicion</span>
+                <select
                   className="w-full rounded-[1.2rem] border border-(--line) bg-(--background) px-4 py-3 text-sm text-(--ink) outline-none transition focus:border-(--brand) focus:shadow-[0_0_0_4px_rgba(37,150,190,0.12)]"
-                  onChange={(event) => setTorneo(event.target.value)}
-                  placeholder="Ej. Liga Nacional"
-                  value={torneo}
-                />
+                  onChange={(event) => setCondicion(event.target.value as FixtureCondition)}
+                  value={condicion}
+                >
+                  {FIXTURE_CONDITION_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="block space-y-2">
+                <span className="text-sm font-medium text-(--ink)">Estado</span>
+                <select
+                  className="w-full rounded-[1.2rem] border border-(--line) bg-(--background) px-4 py-3 text-sm text-(--ink) outline-none transition focus:border-(--brand) focus:shadow-[0_0_0_4px_rgba(37,150,190,0.12)]"
+                  onChange={(event) => setEstado(event.target.value as FixtureStatus)}
+                  value={estado}
+                >
+                  {FIXTURE_STATUS_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               </label>
             </div>
 
@@ -210,7 +203,7 @@ export function FixtureFormDialog({
                       </div>
                     </div>
                   </div>
-                  <div className="grid gap-3 pt-2 sm:grid-cols-2">
+                  <div className="grid gap-3 pt-2">
                     <div className="rounded-[1.2rem] border border-(--line) bg-white px-4 py-3">
                       <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-(--brand-strong)">
                         <CalendarDays className="h-4 w-4" />
@@ -220,56 +213,8 @@ export function FixtureFormDialog({
                         {fechaPartido ? fechaPartido.replace('T', ' ') : 'Sin definir'}
                       </p>
                     </div>
-                    <div className="rounded-[1.2rem] border border-(--line) bg-white px-4 py-3">
-                      <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-(--brand-strong)">
-                        <Swords className="h-4 w-4" />
-                        Torneo
-                      </p>
-                      <p className="mt-2 text-sm text-(--muted)">
-                        {torneo.trim() || 'Sin torneo'}
-                      </p>
-                    </div>
-                    <div className="rounded-[1.2rem] border border-(--line) bg-white px-4 py-3">
-                      <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-(--brand-strong)">
-                        <ShieldCheck className="h-4 w-4" />
-                        Temporada
-                      </p>
-                      <p className="mt-2 text-sm text-(--muted)">{temporada || 'Sin definir'}</p>
-                    </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="grid gap-5 sm:grid-cols-2">
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium text-(--ink)">Condicion</span>
-                  <select
-                    className="w-full rounded-[1.2rem] border border-(--line) bg-(--background) px-4 py-3 text-sm text-(--ink) outline-none transition focus:border-(--brand) focus:shadow-[0_0_0_4px_rgba(37,150,190,0.12)]"
-                    onChange={(event) => setCondicion(event.target.value as FixtureCondition)}
-                    value={condicion}
-                  >
-                    {FIXTURE_CONDITION_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium text-(--ink)">Estado</span>
-                  <select
-                    className="w-full rounded-[1.2rem] border border-(--line) bg-(--background) px-4 py-3 text-sm text-(--ink) outline-none transition focus:border-(--brand) focus:shadow-[0_0_0_4px_rgba(37,150,190,0.12)]"
-                    onChange={(event) => setEstado(event.target.value as FixtureStatus)}
-                    value={estado}
-                  >
-                    {FIXTURE_STATUS_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
               </div>
             </div>
           </div>

@@ -39,20 +39,12 @@ export function FixtureCards({
                   <h3 className="text-lg font-medium text-(--ink)">
                     {rivalTeam?.nombre ?? fixture.rival}
                   </h3>
-                  <p className="text-sm text-(--muted)">Temporada {fixture.temporada}</p>
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-2">
                 <FixtureConditionBadge condicion={fixture.condicion} />
                 <FixtureStatusBadge estado={fixture.estado} />
-              </div>
-
-              <div className="rounded-[1.2rem] border border-(--line) bg-(--background) px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-(--brand-strong)">
-                  Torneo
-                </p>
-                <p className="mt-2 text-sm text-(--muted)">{fixture.torneo ?? 'Sin torneo'}</p>
               </div>
 
               <div className="flex flex-wrap gap-2">

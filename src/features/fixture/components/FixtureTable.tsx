@@ -32,13 +32,7 @@ export function FixtureTable({
                 Rival
               </th>
               <th scope="col" className="border-b border-(--line) px-5 py-4 font-semibold">
-                Temporada
-              </th>
-              <th scope="col" className="border-b border-(--line) px-5 py-4 font-semibold">
                 Condicion
-              </th>
-              <th scope="col" className="border-b border-(--line) px-5 py-4 font-semibold">
-                Torneo
               </th>
               <th scope="col" className="border-b border-(--line) px-5 py-4 font-semibold">
                 Estado
@@ -71,14 +65,8 @@ export function FixtureTable({
                       </div>
                     </div>
                   </td>
-                  <td className="border-b border-(--line) px-5 py-4 align-top text-sm text-(--ink)">
-                    {fixture.temporada}
-                  </td>
                   <td className="border-b border-(--line) px-5 py-4 align-top">
                     <FixtureConditionBadge condicion={fixture.condicion} />
-                  </td>
-                  <td className="border-b border-(--line) px-5 py-4 align-top">
-                    <p className="text-sm text-(--muted)">{fixture.torneo ?? 'Sin torneo'}</p>
                   </td>
                   <td className="border-b border-(--line) px-5 py-4 align-top">
                     <FixtureStatusBadge estado={fixture.estado} />

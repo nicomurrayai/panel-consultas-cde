@@ -2,14 +2,12 @@ import { startTransition, useEffect, useState } from 'react'
 import type {
   FixtureFormValues,
   FixtureRow,
-  FixtureSeasonFilter,
   FixtureStatusFilter,
 } from '../../../types/fixture'
 import {
   createFixture,
   deleteFixture,
   getFixtureList,
-  getFixtureSeasonOptions,
   updateFixture,
 } from '../api'
 
@@ -20,12 +18,6 @@ type ListState = {
   total: number
   isLoading: boolean
   error: string | null
-}
-
-type SeasonOptionsState = {
-  error: string | null
-  isLoading: boolean
-  values: number[]
 }
 
 type SubmitState = {
@@ -39,21 +31,14 @@ type DeleteState = {
 }
 
 export function useFixtureDashboard() {
-  const [seasonFilter, setSeasonFilter] = useState<FixtureSeasonFilter>('all')
   const [statusFilter, setStatusFilter] = useState<FixtureStatusFilter>('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [listRevision, setListRevision] = useState(0)
-  const [seasonRevision, setSeasonRevision] = useState(0)
   const [listState, setListState] = useState<ListState>({
     records: [],
     total: 0,
     isLoading: true,
     error: null,
-  })
-  const [seasonOptionsState, setSeasonOptionsState] = useState<SeasonOptionsState>({
-    error: null,
-    isLoading: true,
-    values: [],
   })
   const [submitState, setSubmitState] = useState<SubmitState>({
     error: null,
@@ -63,16 +48,12 @@ export function useFixtureDashboard() {
     error: null,
     fixtureId: null,
   })
-  const appliedSeasonFilter =
-    seasonFilter === 'all' || seasonOptionsState.values.includes(seasonFilter)
-      ? seasonFilter
-      : 'all'
 
   useEffect(() => {
     startTransition(() => {
       setCurrentPage(1)
     })
-  }, [seasonFilter, statusFilter])
+  }, [statusFilter])
 
   useEffect(() => {
     let isActive = true
@@ -88,7 +69,6 @@ export function useFixtureDashboard() {
     getFixtureList({
       page: currentPage,
       pageSize: PAGE_SIZE,
-      temporada: appliedSeasonFilter === 'all' ? null : appliedSeasonFilter,
       estado: statusFilter,
     })
       .then((result) => {
@@ -121,50 +101,7 @@ export function useFixtureDashboard() {
     return () => {
       isActive = false
     }
-  }, [appliedSeasonFilter, currentPage, listRevision, statusFilter])
-
-  useEffect(() => {
-    let isActive = true
-
-    startTransition(() => {
-      setSeasonOptionsState((current) => ({
-        ...current,
-        isLoading: true,
-        error: null,
-      }))
-    })
-
-    getFixtureSeasonOptions()
-      .then((values) => {
-        if (!isActive) {
-          return
-        }
-
-        setSeasonOptionsState({
-          error: null,
-          isLoading: false,
-          values,
-        })
-      })
-      .catch((error: unknown) => {
-        if (!isActive) {
-          return
-        }
-
-        setSeasonOptionsState((current) => ({
-          ...current,
-          error:
-            error instanceof Error
-              ? error.message
-              : 'No se pudieron cargar las temporadas del fixture.',
-          isLoading: false,
-        }))
-      })
-
-    return () => {
-      isActive = false
-    }
-  }, [seasonRevision])
+  }, [currentPage, listRevision, statusFilter])
 
   const totalPages = Math.max(1, Math.ceil(listState.total / PAGE_SIZE))
 
@@ -179,7 +116,6 @@ export function useFixtureDashboard() {
   function refreshAll() {
     startTransition(() => {
       setListRevision((value) => value + 1)
-      setSeasonRevision((value) => value + 1)
     })
   }
 
@@ -215,7 +151,6 @@ export function useFixtureDashboard() {
       startTransition(() => {
         setCurrentPage(1)
         setListRevision((value) => value + 1)
-        setSeasonRevision((value) => value + 1)
       })
 
       return true
@@ -251,7 +186,6 @@ export function useFixtureDashboard() {
       startTransition(() => {
         setCurrentPage(1)
         setListRevision((value) => value + 1)
-        setSeasonRevision((value) => value + 1)
       })
 
       return true
@@ -288,7 +222,6 @@ export function useFixtureDashboard() {
 
       startTransition(() => {
         setListRevision((value) => value + 1)
-        setSeasonRevision((value) => value + 1)
       })
 
       return true
@@ -317,20 +250,14 @@ export function useFixtureDashboard() {
     deleteFixture: deleteFixtureRecord,
     deletingId: deleteState.fixtureId,
     error: listState.error,
-    hasActiveSeasonFilter: appliedSeasonFilter !== 'all',
     hasActiveStatusFilter: statusFilter !== 'all',
-    isFilterLoading: seasonOptionsState.isLoading,
     isLoading: listState.isLoading,
     isSubmitting: submitState.isLoading,
     records: listState.records,
     refreshAll,
     resultsCount: listState.total,
     saveError: submitState.error,
-    seasonFilter: appliedSeasonFilter,
-    seasonOptions: seasonOptionsState.values,
-    seasonOptionsError: seasonOptionsState.error,
     setCurrentPage: changePage,
-    setSeasonFilter,
     setStatusFilter,
     statusFilter,
     totalPages,

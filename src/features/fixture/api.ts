@@ -10,7 +10,7 @@ import { getFixtureTeamByName } from './teams'
 
 const FIXTURE_TABLE = 'fixture_partidos'
 const FIXTURE_COLUMNS =
-  'id, temporada, fecha_partido, rival, condicion, torneo, estado, created_at, updated_at'
+  'id, fecha_partido, rival, condicion, estado, created_at, updated_at'
 
 function formatSupabaseErrorMessage(error: unknown, fallbackMessage: string) {
   if (error instanceof Error) {
@@ -21,7 +21,6 @@ function formatSupabaseErrorMessage(error: unknown, fallbackMessage: string) {
 }
 
 function buildFixturePayload(values: FixtureFormValues) {
-  const torneo = values.torneo.trim()
   const rivalTeam = getFixtureTeamByName(values.rival)
 
   if (!rivalTeam) {
@@ -29,11 +28,9 @@ function buildFixturePayload(values: FixtureFormValues) {
   }
 
   return {
-    temporada: values.temporada,
     fecha_partido: toFixtureIsoDateTime(values.fecha_partido),
     rival: rivalTeam.nombre,
     condicion: values.condicion,
-    torneo: torneo ? torneo : null,
     estado: values.estado,
   }
 }
@@ -41,7 +38,6 @@ function buildFixturePayload(values: FixtureFormValues) {
 export async function getFixtureList({
   page,
   pageSize,
-  temporada,
   estado,
 }: FixtureListParams): Promise<FixtureListResult> {
   const from = (page - 1) * pageSize
@@ -52,10 +48,6 @@ export async function getFixtureList({
     let query = supabase
       .from(FIXTURE_TABLE)
       .select(FIXTURE_COLUMNS, { count: 'exact' })
-
-    if (temporada !== null) {
-      query = query.eq('temporada', temporada)
-    }
 
     if (estado !== 'all') {
       query = query.eq('estado', estado)
@@ -77,32 +69,6 @@ export async function getFixtureList({
   } catch (error) {
     throw new Error(
       formatSupabaseErrorMessage(error, 'No se pudieron obtener los partidos del fixture.'),
-    )
-  }
-}
-
-export async function getFixtureSeasonOptions(): Promise<number[]> {
-  const supabase = getSupabaseClient()
-
-  try {
-    const { data, error } = await supabase
-      .from(FIXTURE_TABLE)
-      .select('temporada')
-      .order('temporada', { ascending: false })
-
-    if (error) {
-      throw error
-    }
-
-    return Array.from(new Set((data ?? []).map((item) => item.temporada))).sort(
-      (left, right) => right - left,
-    )
-  } catch (error) {
-    throw new Error(
-      formatSupabaseErrorMessage(
-        error,
-        'No se pudieron cargar las temporadas del fixture.',
-      ),
     )
   }
 }

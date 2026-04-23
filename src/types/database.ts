@@ -31,22 +31,18 @@ export type Database = {
         Row: FixtureRow
         Insert: {
           id?: number
-          temporada: number
           fecha_partido: string
           rival: string
           condicion: FixtureCondition
-          torneo?: string | null
           estado?: FixtureStatus
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: number
-          temporada?: number
           fecha_partido?: string
           rival?: string
           condicion?: FixtureCondition
-          torneo?: string | null
           estado?: FixtureStatus
           created_at?: string
           updated_at?: string

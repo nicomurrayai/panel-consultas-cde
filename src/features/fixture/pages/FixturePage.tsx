@@ -3,7 +3,6 @@ import { useState } from 'react'
 import type {
   FixtureFormValues,
   FixtureRow,
-  FixtureSeasonFilter,
   FixtureStatusFilter,
 } from '../../../types/fixture'
 import { PaginationControls } from '../../contacto/components/PaginationControls'
@@ -33,20 +32,14 @@ export function FixturePage() {
     deleteFixture,
     deletingId,
     error,
-    hasActiveSeasonFilter,
     hasActiveStatusFilter,
-    isFilterLoading,
     isLoading,
     isSubmitting,
     records,
     refreshAll,
     resultsCount,
     saveError,
-    seasonFilter,
-    seasonOptions,
-    seasonOptionsError,
     setCurrentPage,
-    setSeasonFilter,
     setStatusFilter,
     statusFilter,
     totalPages,
@@ -55,12 +48,10 @@ export function FixturePage() {
   const [dialogState, setDialogState] = useState<DialogState>(null)
 
   const showEmptyState = !isLoading && !error && records.length === 0
-  const hasActiveFilters = hasActiveSeasonFilter || hasActiveStatusFilter
+  const hasActiveFilters = hasActiveStatusFilter
   const selectedStatusLabel =
     FIXTURE_FILTER_STATUS_OPTIONS.find((option) => option.value === statusFilter)?.label ??
     'Todos los estados'
-  const selectedSeasonLabel =
-    seasonFilter === 'all' ? 'Todas las temporadas' : `Temporada ${seasonFilter}`
   const resultLabel = hasActiveFilters
     ? `${resultsCount} resultados`
     : `${resultsCount} partidos`
@@ -130,7 +121,7 @@ export function FixturePage() {
                 Gestion de partidos
               </h2>
               <p className="mt-2 text-sm text-(--muted) sm:text-base">
-                Organiza el fixture por temporada, estado y fecha del encuentro.
+                Organiza el fixture por estado y fecha del encuentro.
               </p>
             </div>
           </div>
@@ -140,10 +131,10 @@ export function FixturePage() {
               type="button"
               onClick={refreshAll}
               className="inline-flex items-center justify-center gap-2 rounded-full border border-(--line) bg-white px-4 py-2 font-medium text-(--ink) transition hover:border-(--brand) hover:text-(--brand) disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={isLoading || isFilterLoading}
+              disabled={isLoading}
             >
               <RefreshCcw
-                className={`h-4 w-4 ${isLoading || isFilterLoading ? 'animate-spin' : ''}`}
+                className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
               />
               Actualizar
             </button>
@@ -164,12 +155,6 @@ export function FixturePage() {
             <span>{resultLabel}</span>
             <span className="hidden h-1 w-1 rounded-full bg-(--brand) sm:block" />
             <span>Ordenados por fecha ascendente</span>
-            {hasActiveSeasonFilter ? (
-              <>
-                <span className="hidden h-1 w-1 rounded-full bg-(--brand) sm:block" />
-                <span>{selectedSeasonLabel}</span>
-              </>
-            ) : null}
             {hasActiveStatusFilter ? (
               <>
                 <span className="hidden h-1 w-1 rounded-full bg-(--brand) sm:block" />
@@ -178,31 +163,7 @@ export function FixturePage() {
             ) : null}
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="group relative flex min-w-0 items-center gap-3 rounded-[1.4rem] border border-(--line) bg-(--background) px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition focus-within:border-(--brand) focus-within:shadow-[0_0_0_4px_rgba(37,150,190,0.12)]">
-              <ListFilter className="h-5 w-5 text-(--brand)" />
-              <select
-                className="w-full appearance-none border-0 bg-transparent pr-8 text-sm text-(--ink) outline-none"
-                value={seasonFilter}
-                onChange={(event) =>
-                  setSeasonFilter(
-                    event.target.value === 'all'
-                      ? 'all'
-                      : (Number.parseInt(event.target.value, 10) as FixtureSeasonFilter),
-                  )
-                }
-                aria-label="Filtrar por temporada"
-              >
-                <option value="all">Todas las temporadas</option>
-                {seasonOptions.map((season) => (
-                  <option key={season} value={season}>
-                    Temporada {season}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-4 h-4 w-4 text-(--muted)" />
-            </label>
-
+          <div className="grid gap-3">
             <label className="group relative flex min-w-0 items-center gap-3 rounded-[1.4rem] border border-(--line) bg-(--background) px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition focus-within:border-(--brand) focus-within:shadow-[0_0_0_4px_rgba(37,150,190,0.12)]">
               <ListFilter className="h-5 w-5 text-(--brand)" />
               <select
@@ -225,12 +186,6 @@ export function FixturePage() {
         </div>
 
         <div className="px-5 py-5 lg:px-6 lg:py-6">
-          {seasonOptionsError ? (
-            <p className="mb-5 rounded-[1rem] border border-[rgba(37,150,190,0.18)] bg-[rgba(37,150,190,0.08)] px-4 py-3 text-sm text-(--brand-strong)">
-              {seasonOptionsError}
-            </p>
-          ) : null}
-
           {deleteError ? (
             <p className="mb-5 rounded-[1rem] border border-[rgba(220,38,38,0.18)] bg-[rgba(254,242,242,0.82)] px-4 py-3 text-sm text-[rgb(127,29,29)]">
               {deleteError}
@@ -305,7 +260,7 @@ function EmptyState({ hasActiveFilters, onCreate }: EmptyStateProps) {
         </h3>
         <p className="text-sm leading-7 text-(--muted) sm:text-base">
           {hasActiveFilters
-            ? 'Prueba con otra temporada o con un estado diferente.'
+            ? 'Prueba con un estado diferente.'
             : 'Crea el primer partido para empezar a ordenar el fixture.'}
         </p>
         <button
@@ -356,12 +311,10 @@ function LoadingState() {
   return (
     <div className="space-y-4">
       <div className="hidden overflow-hidden rounded-3xl border border-(--line) md:block">
-        <div className="grid grid-cols-[1.2fr_0.95fr_0.55fr_0.8fr_0.95fr_0.9fr_0.95fr] gap-3 border-b border-(--line) bg-(--surface-soft) px-5 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-(--brand-strong)">
+        <div className="grid grid-cols-[1.2fr_0.95fr_0.8fr_0.9fr_0.95fr] gap-3 border-b border-(--line) bg-(--surface-soft) px-5 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-(--brand-strong)">
           <span>Fecha</span>
           <span>Rival</span>
-          <span>Temp.</span>
           <span>Condicion</span>
-          <span>Torneo</span>
           <span>Estado</span>
           <span>Acciones</span>
         </div>
@@ -369,13 +322,11 @@ function LoadingState() {
           {Array.from({ length: 5 }, (_, index) => (
             <div
               key={index}
-              className="grid animate-pulse grid-cols-[1.2fr_0.95fr_0.55fr_0.8fr_0.95fr_0.9fr_0.95fr] gap-3 px-5 py-4"
+              className="grid animate-pulse grid-cols-[1.2fr_0.95fr_0.8fr_0.9fr_0.95fr] gap-3 px-5 py-4"
             >
               <div className="h-4 rounded-full bg-(--surface-strong)" />
               <div className="h-4 rounded-full bg-(--surface-strong)" />
-              <div className="h-4 rounded-full bg-(--surface-strong)" />
               <div className="h-9 rounded-full bg-(--surface-strong)" />
-              <div className="h-4 rounded-full bg-(--surface-strong)" />
               <div className="h-9 rounded-full bg-(--surface-strong)" />
               <div className="h-10 rounded-full bg-(--surface-strong)" />
             </div>
