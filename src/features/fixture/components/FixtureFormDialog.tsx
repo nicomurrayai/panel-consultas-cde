@@ -4,8 +4,11 @@ import { createPortal } from 'react-dom'
 import type { FixtureCondition, FixtureFormValues, FixtureRow, FixtureStatus } from '../../../types/fixture'
 import { toFixtureDateTimeInputValue } from '../dateTime'
 import { FIXTURE_CONDITION_OPTIONS, FIXTURE_STATUS_OPTIONS } from '../status'
+import { getFixtureTeamByName } from '../teams'
 import { FixtureConditionBadge } from './FixtureConditionBadge'
 import { FixtureStatusBadge } from './FixtureStatusBadge'
+import { FixtureTeamLogo } from './FixtureTeamLogo'
+import { FixtureTeamSelect } from './FixtureTeamSelect'
 
 type FixtureFormDialogProps = {
   errorMessage: string | null
@@ -20,10 +23,12 @@ type FixtureFormDialogProps = {
 const DEFAULT_SEASON = new Date().getFullYear()
 
 function getInitialFormState(fixture: FixtureRow | null) {
+  const fixtureTeam = getFixtureTeamByName(fixture?.rival)
+
   return {
     temporada: String(fixture?.temporada ?? DEFAULT_SEASON),
     fechaPartido: toFixtureDateTimeInputValue(fixture?.fecha_partido),
-    rival: fixture?.rival ?? '',
+    rival: fixtureTeam?.nombre ?? '',
     condicion: fixture?.condicion ?? 'local',
     torneo: fixture?.torneo ?? '',
     estado: fixture?.estado ?? 'programado',
@@ -42,7 +47,7 @@ export function FixtureFormDialog({
   const initialFormState = getInitialFormState(fixture)
   const [temporada, setTemporada] = useState(initialFormState.temporada)
   const [fechaPartido, setFechaPartido] = useState(initialFormState.fechaPartido)
-  const [rival, setRival] = useState(initialFormState.rival)
+  const [rival, setRival] = useState<string>(initialFormState.rival)
   const [condicion, setCondicion] = useState<FixtureCondition>(initialFormState.condicion)
   const [torneo, setTorneo] = useState(initialFormState.torneo)
   const [estado, setEstado] = useState<FixtureStatus>(initialFormState.estado)
@@ -78,14 +83,14 @@ export function FixtureFormDialog({
     event.preventDefault()
 
     const parsedTemporada = Number.parseInt(temporada, 10)
-    const trimmedRival = rival.trim()
+    const selectedTeam = getFixtureTeamByName(rival)
 
     if (!Number.isInteger(parsedTemporada) || parsedTemporada <= 0) {
       setLocalError('La temporada debe ser un numero entero mayor a cero.')
       return
     }
 
-    if (!fechaPartido || !trimmedRival) {
+    if (!fechaPartido || !selectedTeam) {
       setLocalError('Completa temporada, fecha y rival antes de guardar.')
       return
     }
@@ -95,7 +100,7 @@ export function FixtureFormDialog({
     await onSubmit({
       temporada: parsedTemporada,
       fecha_partido: fechaPartido,
-      rival: trimmedRival,
+      rival: selectedTeam.nombre,
       condicion,
       torneo: torneo.trim(),
       estado,
@@ -107,6 +112,7 @@ export function FixtureFormDialog({
     mode === 'create'
       ? 'Carga un partido del fixture con fecha, condicion y estado.'
       : 'Actualiza la fecha, el rival o el estado del partido seleccionado.'
+  const selectedTeam = getFixtureTeamByName(rival)
 
   return createPortal(
     <div
@@ -170,15 +176,10 @@ export function FixtureFormDialog({
                 />
               </label>
 
-              <label className="block space-y-2 sm:col-span-2">
+              <div className="block space-y-2 sm:col-span-2">
                 <span className="text-sm font-medium text-(--ink)">Rival</span>
-                <input
-                  className="w-full rounded-[1.2rem] border border-(--line) bg-(--background) px-4 py-3 text-sm text-(--ink) outline-none transition focus:border-(--brand) focus:shadow-[0_0_0_4px_rgba(37,150,190,0.12)]"
-                  onChange={(event) => setRival(event.target.value)}
-                  placeholder="Ej. Club Atletico River Plate"
-                  value={rival}
-                />
-              </label>
+                <FixtureTeamSelect onChange={setRival} value={rival} />
+              </div>
 
               <label className="block space-y-2 sm:col-span-2">
                 <span className="text-sm font-medium text-(--ink)">Torneo</span>
@@ -197,13 +198,16 @@ export function FixtureFormDialog({
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-(--brand-strong)">
                     Vista previa
                   </p>
-                  <div className="space-y-2">
-                    <h4 className="font-display text-2xl text-(--ink)">
-                      {rival.trim() || 'Rival pendiente'}
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      <FixtureConditionBadge condicion={condicion} />
-                      <FixtureStatusBadge estado={estado} />
+                  <div className="flex items-center gap-4">
+                    <FixtureTeamLogo team={selectedTeam} size="lg" />
+                    <div className="min-w-0 space-y-2">
+                      <h4 className="truncate font-display text-2xl text-(--ink)">
+                        {selectedTeam?.nombre ?? 'Rival pendiente'}
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        <FixtureConditionBadge condicion={condicion} />
+                        <FixtureStatusBadge estado={estado} />
+                      </div>
                     </div>
                   </div>
                   <div className="grid gap-3 pt-2 sm:grid-cols-2">

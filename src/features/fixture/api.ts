@@ -6,6 +6,7 @@ import type {
   FixtureRow,
 } from '../../types/fixture'
 import { toFixtureIsoDateTime } from './dateTime'
+import { getFixtureTeamByName } from './teams'
 
 const FIXTURE_TABLE = 'fixture_partidos'
 const FIXTURE_COLUMNS =
@@ -21,11 +22,16 @@ function formatSupabaseErrorMessage(error: unknown, fallbackMessage: string) {
 
 function buildFixturePayload(values: FixtureFormValues) {
   const torneo = values.torneo.trim()
+  const rivalTeam = getFixtureTeamByName(values.rival)
+
+  if (!rivalTeam) {
+    throw new Error('Selecciona un rival valido de la lista.')
+  }
 
   return {
     temporada: values.temporada,
     fecha_partido: toFixtureIsoDateTime(values.fecha_partido),
-    rival: values.rival.trim(),
+    rival: rivalTeam.nombre,
     condicion: values.condicion,
     torneo: torneo ? torneo : null,
     estado: values.estado,
